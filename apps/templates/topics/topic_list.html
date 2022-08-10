@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+{% extends "_base.html" %}
+{% block title %} <title> Topic List </title>{% endblock title%}
+{% block content %}
+<h1>Here are all the topics!</h1>
+{% for topic in topics %}
+<li>
+    <ol>{{topic.title}}</ol>
+    <ol>{{topic.description}}</ol>
+</li>
+{% endfor %}
+{% endblock content %}

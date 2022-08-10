@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+{% load crispy_forms_tags %}
+
+<form method="post">
+
+    <ul> {{comment_form|crispy}} </ul>
+    {% csrf_token %}
+    <input value="Create" type="submit">
+
+</form>
