@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block header %}
+<ul class="nav nav-tabs pt-5" id="myTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">My Threads</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">My Comments</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">UpVoted</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled-tab-pane" type="button" role="tab" aria-controls="disabled-tab-pane" aria-selected="false" >DownVoted</button>
+  </li>
+</ul>
+{% endblock header %}
+
+{% block content %}
+<div class="tab-content" id="myTabContent">
+  <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+    {% for thread in threads %}
+      <div class="card mb-4">
+        <a href="#!"><img class="card-img-top" src="https://dummyimage.com/700x350/dee2e6/6c757d.jpg" alt="..." /></a>
+        <div class="card-body">
+            <div class="small text-muted">
+                <div>
+                    <a href="{% url 'posts:thread_list' thread.category.title %}">{{ thread.category.title }}</a>
+                    <div class="d-flex justify-content-between">By {{ thread.op.created_by.username }}<div></div>edited on {{ thread.op.edited_on }}</div>
+                </div>
+            </div>
+            <h2 class="card-title">{{thread.title}}</h2>
+            <p class="card-text">{{ thread.op }} ...</p>
+            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
+        </div>
+    </div>
+      {% endfor %}
+  </div>
+
+
+  <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+      {% for comment in comments %}
+      <div class="card mb-4">
+        <a href="#!"><img class="card-img-top" src="https://dummyimage.com/700x350/dee2e6/6c757d.jpg" alt="..." /></a>
+        <div class="card-body">
+            <div class="small text-muted">
+                <div>
+                    <div class="d-flex justify-content-between">{{ comment.created_by.username }} commented on {{ comment.thread.title }}</div>
+                    <div class="d-flex justify-content-between">- {{ comment.thread.category }} - Posted by {{comment.thread.op.created_by.username}}</div>
+                </div>
+                <hr />
+                <div>
+                    <a href=""></a>
+                    <div class="d-flex justify-content-between">By {{ comment.created_by.username }}<div></div>edited on {{ comment.edited_on }}</div>
+                </div>
+            </div>
+            <h2 class="card-title">{{comment.content}}</h2>
+            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
+        </div>
+    </div>
+      {% endfor %}
+  </div>
+
+  <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
+      {% for comment in upvotes %}
+      <div class="card mb-4">
+        <a href="#!"><img class="card-img-top" src="https://dummyimage.com/700x350/dee2e6/6c757d.jpg" alt="..." /></a>
+        <div class="card-body">
+            <div class="small text-muted">
+                <div>
+                    <div class="d-flex justify-content-between">{{ comment.created_by.username }} upvoted on {{ comment.thread.title }}</div>
+                    <div class="d-flex justify-content-between">- {{ comment.thread.category }} - Posted by {{comment.thread.op.created_by.username}}</div>
+                </div>
+                <hr />
+                <div>
+                    <a href=""></a>
+                    <div class="d-flex justify-content-between">By {{ comment.created_by.username }}<div></div>edited on {{ comment.edited_on }}</div>
+                </div>
+            </div>
+            <h2 class="card-title">{{comment.content}}</h2>
+            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
+        </div>
+    </div>
+      {% endfor %}
+  </div>
+
+  <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
+      {% for comment in downvotes %}
+      <div class="card mb-4">
+        <a href="#!"><img class="card-img-top" src="https://dummyimage.com/700x350/dee2e6/6c757d.jpg" alt="..." /></a>
+        <div class="card-body">
+            <div class="small text-muted">
+                <div>
+                    <div class="d-flex justify-content-between">{{ comment.created_by.username }} downvoted on {{ comment.thread.title }}</div>
+                    <div class="d-flex justify-content-between">- {{ comment.thread.category }} - Posted by {{comment.thread.op.created_by.username}}</div>
+                </div>
+                <hr />
+                <div>
+                    <a href=""></a>
+                    <div class="d-flex justify-content-between">By {{ comment.created_by.username }}<div></div>edited on {{ comment.edited_on }}</div>
+                </div>
+            </div>
+            <h2 class="card-title">{{comment.content}}</h2>
+            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
+        </div>
+    </div>
+      {% endfor %}
+  </div>
+</div>
+{% endblock content %}

@@ -17,6 +17,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = os.path.join(BASE_DIR, "apps/templates")
+STATIC_DIR = os.path.join(BASE_DIR, "apps/static")
 
 
 # Quick-start development settings - unsuitable for production
@@ -51,10 +52,11 @@ INSTALLED_APPS = [
     "apps.profiles",
     "apps.topics",
     "apps.posts",
+    "apps.votes",
 ]
 
-LOGIN_REDIRECT_URL = "topic_list"
-LOGOUT_REDIRECT_URL = "topic_list"
+LOGIN_REDIRECT_URL = "posts:homepage"
+LOGOUT_REDIRECT_URL = "posts:homepage"
 SITE_ID = 1
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -76,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.profiles.middleware.current_user.CurrentUserMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -91,6 +94,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.posts.context_processors.category_renderer',
             ],
         },
     },
@@ -144,9 +148,11 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
-
+# https://docs.djangoproject.com/en/4.0/howto/static-files/
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [STATIC_DIR,]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+#STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% extends "posts/thread_list_base.html" %}
+
+{% block thread_head %}
+<header class="masthead bg-primary text-white text-center">
+    <div class="container d-flex align-items-center flex-column">
+        <!-- Masthead Avatar Image-->
+        <img class="masthead-avatar mb-5" src="assets/img/avataaars.svg" alt="..." />
+        <!-- Masthead Heading-->
+        <h1 class="masthead-heading text-uppercase mb-0">Start Bootstrap</h1>
+        <!-- Icon Divider-->
+        <div class="divider-custom divider-light">
+            <div class="divider-custom-line"></div>
+            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+            <div class="divider-custom-line"></div>
+        </div>
+        <!-- Masthead Subheading-->
+        <p class="masthead-subheading font-weight-light mb-0">Graphic Artist - Web Designer - Illustrator</p>
+    </div>
+</header>
+{% endblock thread_head %}
+
+{% block thread_body %}
+<div>
+    <a href="{% url 'posts:thread_list' thread.category.title %}">{{ thread.category.title }}</a>
+    <div class="d-flex justify-content-between">By {{ thread.op.created_by.username }}<div></div>edited on {{ thread.op.edited_on }}</div>
+</div>
+<a href="{{thread.get_absolute_url}}">
+    <ol>{{thread.title}}</ol>
+</a>
+{% endblock thread_body %}

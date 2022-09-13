@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %} <title> Thread List </title>{% endblock title%}
+{% block content %}
+<h1>Here are all the threads!</h1>
+{% for thread in threads %}
+<div class="container-fluid pt-3">
+        <div class="card mb-1">
+            <div class="card-header">
+                <div>
+                    <a href="{% url 'posts:thread_list' thread.category.title %}">{{ thread.category.title }}</a>
+                    <div class="d-flex justify-content-between">By {{ thread.op.created_by.username }}<div></div>edited on {{ thread.op.edited_on }}</div>
+                </div>
+                <a href="{{thread.get_absolute_url}}">
+                    <ol>{{thread.title}}</ol>
+                </a>
+            </div>
+            <div class="card-body">
+                {{ thread.op }} ...
+            </div>
+        </div>
+</div>
+{% endfor %}
+{% endblock content %}

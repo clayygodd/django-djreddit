@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 {% load crispy_forms_tags %}
 
-<form method="post">
-
-    <ul> {{comment_form|crispy}} </ul>
+<form class="form-insert py-2" method="post" action="{{form_url}}">
+    <div class="container">
+    <div>{{form|crispy}}</div>
     {% csrf_token %}
-    <input value="Create" type="submit">
-
+    <button type="submit" class="btn btn-primary btn-lg btn-block">Submit</button>
+    </div>
 </form>

@@ -20,5 +20,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include("allauth.urls")),
     path('topic/', include("apps.topics.urls")),
-    path('', include("apps.posts.urls")),
+    path('', include("apps.posts.urls", namespace="posts")),
+    path('vote/', include("apps.votes.urls")),
 ]

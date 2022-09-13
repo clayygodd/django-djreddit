@@ -1,0 +1,127 @@
+{% load vote_tags %}
+{% load static %}
+<div class="row">
+    {% if comment|user_vote:user == 1 %}
+    <div class="col-sm">
+        <img class="vote-up-{{ comment.id }} selected" src = "{% static 'image/vote-up-on.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
+    </div>
+    {% else %}
+    <div class="col-sm">
+        <img class="vote-up-{{ comment.id }}" src = "{% static 'image/vote-up-off.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
+    </div>
+    {% endif %}
+    <div class="col-sm" id="message-{{ comment.id }}">{{ comment.get_score.score }}</div>
+    {% if comment|user_vote:user == -1 %}
+    <div class="col-sm">
+         <img class="vote-down-{{ comment.id }} selected" src = "{% static 'image/vote-down-on.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
+    </div>
+    {% else %}
+    <div class="col-sm">
+         <img class="vote-down-{{ comment.id }}" src = "{% static 'image/vote-down-off.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
+    </div>
+    {% endif %}
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script type="text/javascript">
+$('.vote-up-{{ comment.id }}').click(function(){
+    var catid;
+    catid = $(this).attr("data-catid");
+    if ($(this).hasClass('selected')) {
+    var d=0
+    $.ajax(
+        {
+        type:"GET",
+        url: "{% url 'vote'%}",
+        data:{
+                 object_id: catid,
+                 direction: d
+            },
+        success: function( data )
+        {
+            $('img.vote-up-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-up-off.png' %}")
+                        .removeClass('selected');
+            $( '#message-{{ comment.id }}' ).text(data);
+        }
+     })
+     }else{
+     var d=1
+    $.ajax(
+        {
+        type:"GET",
+        url: "{% url 'vote'%}",
+        data:{
+                 object_id: catid,
+                 direction: d
+            },
+        success: function( data )
+        {
+            if($('img.vote-down-{{ comment.id }}').hasClass('selected')){
+                $('img.vote-up-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-up-on.png' %}")
+                        .addClass('selected');
+                $( '#message-{{ comment.id }}' ).text(data);
+                $('img.vote-down-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-down-off.png' %}")
+                        .removeClass('selected');
+              }else{$('img.vote-up-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-up-on.png' %}")
+                        .addClass('selected');
+                $( '#message-{{ comment.id }}' ).text(data);}
+        }
+     })
+     }
+});
+
+$('.vote-down-{{ comment.id }}').click(function(){
+    var catid;
+    catid = $(this).attr("data-catid");
+    if ($(this).hasClass('selected')) {
+    var d=0
+    $.ajax(
+        {
+        type:"GET",
+        url: "{% url 'vote'%}",
+        data:{
+                 object_id: catid,
+                 direction: d
+            },
+        success: function( data )
+        {
+            $('img.vote-down-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-down-off.png' %}")
+                        .removeClass('selected');
+            $( '#message-{{ comment.id }}' ).text(data);
+        }
+     })
+     }else{
+     var d=-1
+    $.ajax(
+        {
+        type:"GET",
+        url: "{% url 'vote'%}",
+        data:{
+                 object_id: catid,
+                 direction: d
+            },
+        success: function( data )
+        {
+            if($('img.vote-up-{{ comment.id }}').hasClass('selected')){
+                $('img.vote-down-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-down-on.png' %}")
+                        .addClass('selected');
+                $( '#message-{{ comment.id }}' ).text(data);
+                $('img.vote-up-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-up-off.png' %}")
+                        .removeClass('selected');
+              }else{$('img.vote-down-{{ comment.id }}').removeAttr('src')
+                        .attr('src', "{% static 'image/vote-down-on.png' %}")
+                        .addClass('selected');
+                $( '#message-{{ comment.id }}' ).text(data);}
+        }
+     })
+     }
+});
+</script>
+</script>
+

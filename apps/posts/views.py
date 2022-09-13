@@ -1,61 +1,175 @@
+from django.conf import settings
+from django.shortcuts import redirect
 from django.shortcuts import render, get_object_or_404, HttpResponseRedirect
-from .models import Post, Comment, Category
-from .forms import NewCommentForm
-from django.views.generic import ListView
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.contrib.auth import get_user_model
+
+from .models import Comment, Thread, Category
+from .forms import NewCommentForm, NewThreadForm
+from apps.votes.models import Vote
+
+class TitleSearchMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        q = self.request.GET.get('q')
+        if q:
+            return queryset.filter(title__icontains=q)
+        return queryset
 
 
-def home(request):
-
-    all_posts = Post.newmanager.all()
-
-    return render(request, 'posts/index.html', {'posts': all_posts})
-
-
-def post_single(request, post):
-
-    post = get_object_or_404(Post, slug=post, status='published')
-
-    allcomments = post.comments.filter(status=True)
-    page = request.GET.get('page', 1)
-
-    paginator = Paginator(allcomments, 10)
-    try:
-        comments = paginator.page(page)
-    except PageNotAnInteger:
-        comments = paginator.page(1)
-    except EmptyPage:
-        comments = paginator.page(paginator.num_pages)
-
-    user_comment = None
-
-    if request.method == 'POST':
-        comment_form = NewCommentForm(request.POST)
-        if comment_form.is_valid():
-            user_comment = comment_form.save(commit=False)
-            user_comment.post = post
-            user_comment.save()
-            return HttpResponseRedirect('/' + post.slug)
-    else:
-        comment_form = NewCommentForm()
-    return render(request, 'posts/single.html', {'post': post, 'comments': comments, 'comment_form': comment_form, 'allcomments': allcomments, })
+class TestTemplate(TemplateView):
+    template_name = "posts/test.html"
 
 
 class CatListView(ListView):
-    template_name = 'posts/category.html'
-    context_object_name = 'catlist'
+    model = Category
+    context_object_name = "categories"
+    template_name = "category_list.html"
+
+
+class ThreadListBaseView(ListView):
+    model = Thread
+    context_object_name = "threads"
+    template_name = "thread_list.html"
+
+    class Meta:
+        abstract = True
+
+
+class ThreadListView(ThreadListBaseView):
+    """
+    List all threads in category specific category.
+    """
+    def dispatch(self, request, *args, **kwargs):
+        title = self.kwargs.get('title')
+        self.category = get_object_or_404(Category, title=title)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        content = {
-            'cat': self.kwargs['category'],
-            'posts': Post.objects.filter(category__name=self.kwargs['category']).filter(status='published')
-        }
-        return content
+        queryset = Thread.objects.filter(category=self.category)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category
+        return context
 
 
-def category_list(request):
-    category_list = Category.objects.exclude(name='default')
-    context = {
-        "category_list": category_list,
-    }
-    return context
+class HomePageView(ThreadListBaseView):
+    """
+    Show all subscribed threads if login, else show all threads.
+    """
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            subscribed = user.subscribed.all()
+            queryset = Thread.objects.filter(category__in=subscribed)
+            if queryset:
+                return queryset
+            else:
+                return Thread.objects.all()
+        return Thread.objects.all()
+
+
+class ThreadDetailView(DetailView):
+    """
+    Thread detail page with all of its comments.
+    """
+    model = Thread
+    context_object_name = "thread"
+    template_name = "posts/thread_detail.html"
+
+    def get_object(self):
+        thread = get_object_or_404(Thread, slug=self.kwargs.get("comment_slug"))
+        return thread
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        op = self.object.op
+        all_comments = op.get_all_comments()
+        context['allcomments'] = all_comments
+        return context
+
+
+class ThreadCreateView(LoginRequiredMixin, CreateView):
+    model = Thread
+    form_class = NewThreadForm
+    template_name = "posts/thread_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comment_form'] = NewCommentForm
+        return context
+
+    def post(self, request, *args, **kwargs):
+        thread_form = self.get_form()
+        comment_form = NewCommentForm(data = request.POST)
+        if thread_form.is_valid() and comment_form.is_valid():
+            return self.form_valid(thread_form, comment_form)
+        else:
+            return HttpResponseRedirect(reverse_lazy("posts:thread_create"))
+
+    def form_valid(self, thread_form, comment_form):
+        comment_form.instance.created_by = self.request.user
+        comment = comment_form.save()
+        thread = thread_form.save(commit=False)
+        thread.op = comment
+        thread.save()
+        return HttpResponseRedirect(thread.get_absolute_url())
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    template_name = "posts/reply.html"
+    form_class = NewCommentForm
+
+    def get_success_url(self):
+        url = self.object.thread.get_absolute_url()
+        return url
+
+    def form_valid(self, form):
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        parent = Comment.objects.get(id = pk)
+        form.instance.parent = parent
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+
+class CommentEditView(LoginRequiredMixin, UpdateView):
+    model = Comment
+    template_name = "posts/reply.html"
+    form_class = NewCommentForm
+
+    def get_success_url(self):
+        url = self.object.thread.get_absolute_url()
+        return url
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        comment = self.get_object()
+        if comment.created_by == request.user:
+            return response
+        else:
+            redirect_url = "/"
+            return redirect(redirect_url)
+
+
+class UserProfileView(LoginRequiredMixin, ListView):
+    model = Thread
+    template_name = "posts/user_profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ops = Comment.objects.filter(parent = None)
+        username = self.kwargs.get("username")
+        user_model = get_user_model()
+        user = get_object_or_404(user_model, username = username)
+        comments = Comment.objects.filter(created_by = user)
+        votes = user.vote_set.all()
+        context["threads"] = [ op.thread for op in ops if op.created_by == user]
+        context["comments"] = [comment for comment in comments if comment.parent]
+        context["upvotes"] = [i.comment for i in votes if i.vote==1]
+        context["downvotes"] = [i.comment for i in votes if i.vote==-1]
+        return context
