@@ -1,19 +1,37 @@
 {% load vote_tags %}
 {% load static %}
 <div class="row">
-    {% if comment|user_vote:user == 1 %}
+
+    <!-- upvote button -->
+    {% if not user.is_authenticated %}
+    <div class="col-sm">
+        <a href="{% url 'account_login' %}">
+            <img src = "{% static 'image/vote-up-off.png' %}" title="Please login to upvote!" />
+        </a>
+        </div>
+    {% elif comment|user_vote:user == 1 %}
     <div class="col-sm">
         <img class="vote-up-{{ comment.id }} selected" src = "{% static 'image/vote-up-on.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
     </div>
     {% else %}
     <div class="col-sm">
-        <img class="vote-up-{{ comment.id }}" src = "{% static 'image/vote-up-off.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
+        <img class="vote-up-{{ comment.id }}" src = "{% static 'image/vote-up-off.png' %}" title="Vote this thread DOWN. (click again to undo)" data-catid="{{ comment.id }}"/>
     </div>
     {% endif %}
+
+    <!-- score display -->
     <div class="col-sm" id="message-{{ comment.id }}">{{ comment.get_score.score }}</div>
-    {% if comment|user_vote:user == -1 %}
+
+    <!-- downvote button -->
+    {% if not user.is_authenticated %}
     <div class="col-sm">
-         <img class="vote-down-{{ comment.id }} selected" src = "{% static 'image/vote-down-on.png' %}" title="Vote this thread UP. (click again to undo)" data-catid="{{ comment.id }}"/>
+        <a href="{% url 'account_login' %}">
+            <img src = "{% static 'image/vote-down-off.png' %}" title="Please login to downvote!" />
+        </a>
+    </div>
+    {% elif comment|user_vote:user == -1 %}
+    <div class="col-sm">
+         <img class="vote-down-{{ comment.id }} selected" src = "{% static 'image/vote-down-on.png' %}" title="Vote this thread DOWN. (click again to undo)" data-catid="{{ comment.id }}"/>
     </div>
     {% else %}
     <div class="col-sm">
@@ -21,7 +39,10 @@
     </div>
     {% endif %}
 </div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
 <script type="text/javascript">
 $('.vote-up-{{ comment.id }}').click(function(){
     var catid;
@@ -123,5 +144,5 @@ $('.vote-down-{{ comment.id }}').click(function(){
      }
 });
 </script>
-</script>
+
 

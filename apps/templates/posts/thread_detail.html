@@ -3,23 +3,28 @@
 
 {% block title %}
 Thread
-{% endblock %}
+{% endblock title %}
 
 {% load reply_tags %}
 {% block content %}
-<div class="container pt-4">
+<div id = "maindiv" class="container pt-4">
   <div class="row justify-content-md-center pt-5">
     <div class="lg-7">
+      <div class="small text-muted mb-2">
+        <div class="row">
+            <div class="col-2">
+               <a href="{% url 'posts:thread_list' thread.category.title %}">{{ thread.category.title }}</a>
+            </div>
+            <div class="col-8">
+                <div class="d-flex">By {{ thread.op.created_by.username }} -<div>
+                </div>- edited on {{ thread.op.edited_on }}</div>
+            </div>
+        </div>
+      </div>
       <h3>{{ thread.title }}</h3>
     </div>
     <div class="lg-7">
-      {% if thread.op.edited_on %}
-      <div class="d-flex justify-content-between">By {{ thread.op.created_by.username }}<div></div>edited on {{ thread.op.edited_on }}</div>
-      {% else %}
-      <div class="d-flex justify-content-between">By {{ thread.op.created_by.username }}<div></div>created on {{ thread.op.publish }}</div>
-      {% endif %}
       <p>{{ thread.op.content }}</p>
-
       <hr />
       <div id="myDIV" style="display:block;">
         <div class="row">
@@ -29,11 +34,19 @@ Thread
           </div>
           <div class="col-sm"></div>
         </div>
-        <div class="collapse" id="user_{{ thread.op.id }}">
+        <div class="collapse" id="user_{{ thread.op.id }}" data-bs-parent="#maindiv">
+          <div class="card card-body">
+            {% show_reply_form "reply" thread.op.id %}
+          </div>
+        </div>
+        {% if user == thread.op.created_by %}
+          <button class="button" type="button" data-bs-toggle="collapse" data-bs-target="#edit_{{ thread.op.id }}" aria-expanded="false" aria-controls="edit_{{ thread.op.id }}">Edit</button>
+          <div class="collapse" id="edit_{{ thread.op.id }}" data-bs-parent="#maindiv">
               <div class="card card-body">
-                {% show_reply_form "reply" thread.op.id %}
+                {% show_reply_form "edit" thread.op.id %}
               </div>
-            </div>
+          </div>
+          {% endif %}
       </div>
     </div>
 
@@ -42,11 +55,13 @@ Thread
       <div>
         {% recursetree allcomments %}
         <div id="{{ node.id }}" class="my-2 p-2" style="border: 1px solid grey">
-          {% if thread.op.edited_on %}
-          <div class="d-flex justify-content-between">By {{ node.created_by.username }}<div></div>edited on {{ node.edited_on }}</div>
-          {% else %}
-          <div class="d-flex justify-content-between">By {{ node.created_by.username }}<div></div>created on {{ node.publish }}</div>
-          {% endif %}
+          <div class="small text-muted mb-2">
+            {% if thread.op.edited_on %}
+            <div class="d-flex pt-1 px-2">By {{ node.created_by.username }} -<div></div>- edited on {{ node.edited_on }}</div>
+            {% else %}
+            <div class="d-flex pt-1 px-2">By {{ node.created_by.username }} -</div><div>- created on {{ node.publish }}</div>
+            {% endif %}
+          </div>
           <div>{{ node.content }}</div>
           <hr />
           <div class="row">
@@ -57,14 +72,14 @@ Thread
             <div class="col-sm"></div>
           </div>
 
-          <div class="collapse" id="reply_{{ node.id }}">
+          <div class="collapse" id="reply_{{ node.id }}" data-bs-parent="#maindiv">
               <div class="card card-body">
                 {% show_reply_form "reply" node.id %}
               </div>
           </div>
           {% if user == node.created_by %}
           <button class="button" type="button" data-bs-toggle="collapse" data-bs-target="#edit_{{ node.id }}" aria-expanded="false" aria-controls="edit_{{ node.id }}">Edit</button>
-          <div class="collapse" id="edit_{{ node.id }}">
+          <div class="collapse" id="edit_{{ node.id }}" data-bs-parent="#maindiv">
               <div class="card card-body">
                 {% show_reply_form "edit" node.id %}
               </div>

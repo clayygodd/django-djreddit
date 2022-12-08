@@ -10,10 +10,10 @@
     <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane" type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Comments</button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">UpVoted</button>
+    <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact-tab-pane" type="button" role="tab" aria-controls="contact-tab-pane" aria-selected="false">Categories</button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled-tab-pane" type="button" role="tab" aria-controls="disabled-tab-pane" aria-selected="false" >DownVoted</button>
+    <button class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled-tab-pane" type="button" role="tab" aria-controls="disabled-tab-pane" aria-selected="false" >People</button>
   </li>
 </ul>
 {% endblock header %}
@@ -21,7 +21,8 @@
 {% block content %}
 <div class="tab-content" id="myTabContent">
   <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-    {% for thread in threads %}
+      {% if threads %}
+      {% for thread in threads %}
       <div class="card mb-4">
         <div class="card-body">
             <div class="small text-muted">
@@ -36,10 +37,14 @@
         </div>
     </div>
       {% endfor %}
+      {% else %}
+        <h5 class="pt-4 pb-4">No Matching Results</h5>
+      {% endif %}
   </div>
 
 
   <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+      {% if comments %}
       {% for comment in comments %}
       <div class="card mb-4">
         <div class="card-body">
@@ -59,50 +64,40 @@
         </div>
     </div>
       {% endfor %}
+      {% else %}
+        <h5 class="pt-4 pb-4">No Matching Results</h5>
+      {% endif %}
   </div>
 
   <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
-      {% for comment in upvotes %}
+      {% if categories %}
+      {% for category in categories %}
       <div class="card mb-4">
         <div class="card-body">
-            <div class="small text-muted">
-                <div>
-                    <div class="d-flex justify-content-between">{{ comment.created_by.username }} upvoted on {{ comment.thread.title }}</div>
-                    <div class="d-flex justify-content-between">- {{ comment.thread.category }} - Posted by {{comment.thread.op.created_by.username}}</div>
-                </div>
-                <hr />
-                <div>
-                    <a href=""></a>
-                    <div class="d-flex justify-content-between">By {{ comment.created_by.username }}<div></div>edited on {{ comment.edited_on }}</div>
-                </div>
-            </div>
-            <h2 class="card-title">{{comment.content}}</h2>
-            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
+            <h2 class="card-title">{{category.title}}</h2>
+            <div class="small text-muted">{{category.description}}</div>
+            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Subscribe</a>
         </div>
     </div>
       {% endfor %}
+      {% else %}
+        <h5 class="pt-4 pb-4">No Matching Results</h5>
+      {% endif %}
   </div>
 
   <div class="tab-pane fade" id="disabled-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
-      {% for comment in downvotes %}
+      {% if users %}
+      {% for user in users %}
       <div class="card mb-4">
         <div class="card-body">
-            <div class="small text-muted">
-                <div>
-                    <div class="d-flex justify-content-between">{{ comment.created_by.username }} downvoted on {{ comment.thread.title }}</div>
-                    <div class="d-flex justify-content-between">- {{ comment.thread.category }} - Posted by {{comment.thread.op.created_by.username}}</div>
-                </div>
-                <hr />
-                <div>
-                    <a href=""></a>
-                    <div class="d-flex justify-content-between">By {{ comment.created_by.username }}<div></div>edited on {{ comment.edited_on }}</div>
-                </div>
-            </div>
-            <h2 class="card-title">{{comment.content}}</h2>
-            <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
+            <h2 class="card-title">{{user.username}}</h2>
+            <a class="btn btn-primary" href="{% url 'posts:user_profile' user.username %}">Profile</a>
         </div>
     </div>
       {% endfor %}
+      {% else %}
+        <h5 class="pt-4 pb-4">No Matching Results</h5>
+      {% endif %}
   </div>
 </div>
 {% endblock content %}

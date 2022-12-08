@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}
+New Category
+{% endblock %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="container-fluid pt-5">
+    <form class="form-insert py-2" method="post">
+    <div class="container">
+        <div>{{form|crispy}}</div>
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Submit</button>
+    </div>
+</form>
+</div>
+{% endblock content %}

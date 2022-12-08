@@ -3,15 +3,11 @@ from slugify import slugify
 from mptt.models import MPTTModel, TreeForeignKey
 
 from django.db import models
-from django.utils import timezone
-from django.conf import settings
 from django.urls import reverse
 from django.conf import settings
 
 from apps.profiles.middleware import current_user
 from apps.votes.models import Vote
-#from django.apps import apps
-#Vote = apps.get_model('votes','Vote')
 
 
 def user_directory_path(instance, filename):

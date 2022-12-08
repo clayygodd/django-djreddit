@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
-{% block title %} <title> Thread List </title>{% endblock title%}
+{% block title %} <title> Thread List</title>{% endblock title%}
 
 {% block content %}
-
-{% for thread in threads %}
-<!-- Featured blog post-->
 <div class="card mb-4">
-    <a href="#!"><img class="card-img-top" src="https://dummyimage.com/700x350/dee2e6/6c757d.jpg" alt="..." /></a>
+    <div class="card-body">
+        {% if category %}
+        <a class="" href="{% url 'posts:thread_create' category=category.title %}">
+            <textarea class="form-control" rows="3" placeholder="Create a Thread!"></textarea>
+        </a>
+        {% else %}
+        <a class="" href="{% url 'posts:thread_create' category='nocategory' %}">
+            <textarea class="form-control" rows="3" placeholder="Create a Thread!"></textarea>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if threads %}
+{% for thread in threads %}
+<!-- thread post-->
+<div class="card mb-4">
     <div class="card-body">
         {% block thread_body %}
         {% endblock thread_body %}
@@ -15,6 +28,13 @@
         <a class="btn btn-primary" href="{{thread.get_absolute_url}}">Comment</a>
     </div>
 </div>
-
 {% endfor %}
+{% else %}
+<div class="card mb-4 mt-4 ">
+    <div class="card-body">
+        <p>No Thread in this Category yet!</p>
+        <a href="{% url 'posts:thread_create' %}">Click Me to Create the First Thread! </a>
+    </div>
+</div>
+{% endif %}
 {% endblock content %}

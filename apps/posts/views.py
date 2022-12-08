@@ -1,14 +1,16 @@
 from django.conf import settings
 from django.shortcuts import redirect
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, HttpResponseRedirect
-from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView, TemplateView
+from django.views.generic import View, ListView, DetailView, CreateView, DeleteView, UpdateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Comment, Thread, Category
-from .forms import NewCommentForm, NewThreadForm
-from apps.votes.models import Vote
+from .forms import NewCommentForm, NewThreadForm, NewCategoryForm
+
 
 class TitleSearchMixin:
     def get_queryset(self):
@@ -29,6 +31,12 @@ class CatListView(ListView):
     template_name = "category_list.html"
 
 
+class CatCreateView(LoginRequiredMixin, CreateView):
+    model = Category
+    form_class = NewCategoryForm
+    template_name = "posts/category_create.html"
+
+
 class ThreadListBaseView(ListView):
     model = Thread
     context_object_name = "threads"
@@ -40,7 +48,7 @@ class ThreadListBaseView(ListView):
 
 class ThreadListView(ThreadListBaseView):
     """
-    List all threads in category specific category.
+    Show all threads in category specific category.
     """
     def dispatch(self, request, *args, **kwargs):
         title = self.kwargs.get('title')
@@ -48,8 +56,8 @@ class ThreadListView(ThreadListBaseView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Thread.objects.filter(category=self.category)
-        return queryset
+        queryset = super().get_queryset()
+        return queryset.filter(category=self.category)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -59,18 +67,18 @@ class ThreadListView(ThreadListBaseView):
 
 class HomePageView(ThreadListBaseView):
     """
-    Show all subscribed threads if login, else show all threads.
+    A Show all subscribed threads if login, else show all threads.
+    Show all threads if no subscribed category.
     """
     def get_queryset(self):
         user = self.request.user
-        if user.is_authenticated:
+        queryset = super().get_queryset()
+        if user.is_authenticated and user.subscribed.all():
             subscribed = user.subscribed.all()
-            queryset = Thread.objects.filter(category__in=subscribed)
-            if queryset:
-                return queryset
-            else:
-                return Thread.objects.all()
-        return Thread.objects.all()
+            queryset = queryset.filter(category__in=subscribed)
+            return queryset
+        else:
+            return queryset
 
 
 class ThreadDetailView(DetailView):
@@ -98,10 +106,21 @@ class ThreadCreateView(LoginRequiredMixin, CreateView):
     form_class = NewThreadForm
     template_name = "posts/thread_create.html"
 
+
+    def get_initial(self):
+        """Return the initial data to use for forms on this view."""
+        category = self.kwargs.get("category")
+        if category =="nocategory":
+            return {}
+        else:
+            init_category = get_object_or_404(Category, title=category)
+            return {"category":init_category}
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['comment_form'] = NewCommentForm
         return context
+
 
     def post(self, request, *args, **kwargs):
         thread_form = self.get_form()
@@ -167,9 +186,50 @@ class UserProfileView(LoginRequiredMixin, ListView):
         user_model = get_user_model()
         user = get_object_or_404(user_model, username = username)
         comments = Comment.objects.filter(created_by = user)
-        votes = user.vote_set.all()
+        votes = user.vote.all()
         context["threads"] = [ op.thread for op in ops if op.created_by == user]
         context["comments"] = [comment for comment in comments if comment.parent]
         context["upvotes"] = [i.comment for i in votes if i.vote==1]
         context["downvotes"] = [i.comment for i in votes if i.vote==-1]
         return context
+
+
+class DjredditSearchView(ListView):
+    model = Thread
+    template_name = "posts/djreddit_search.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        q = self.request.GET.get('q')
+        if q:
+            threads_q=Thread.objects.filter(title__icontains=q)
+            categories_q = Category.objects.filter(title__icontains=q)
+            comments_q = Comment.objects.filter(content__icontains=q)
+            user = get_user_model()
+            user_q = user.objects.filter(username__icontains=q)
+            context["threads"] = [thread for thread in threads_q]
+            context["categories"] = [category for category in categories_q]
+            context["comments"] = [comment for comment in comments_q]
+            context["users"] = [user for user in user_q]
+            return context
+        return context
+
+
+class SubscriptionView(View):
+    """Handle subscription post request"""
+
+    def post(self, request, *args, **kwargs):
+        sub = request.POST.get('sub')
+        category_title = self.kwargs.get('category')
+        category = get_object_or_404(Category, title=category_title)
+        if request.user.is_authenticated:
+            if sub=="subscribed":
+                request.user.subscribed.add(category)
+                return redirect("posts:thread_list", title = category.title)
+            elif sub=="unsubscribed":
+                request.user.subscribed.remove(category)
+                return redirect("posts:homepage")
+            else:
+                return HttpResponse("<h1>post request not recognized</h1>")
+        else:
+            return redirect(reverse_lazy("account_login"))

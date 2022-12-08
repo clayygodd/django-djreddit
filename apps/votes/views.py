@@ -3,6 +3,7 @@ import json
 from django.shortcuts import render
 from django.apps import apps
 from django.contrib.auth.views import redirect_to_login
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import (
     Http404,
@@ -21,8 +22,10 @@ from .models import Vote
 
 VOTE_DIRECTIONS = (("up", 1), ("down", -1), ("clear", 0))
 
+
 def json_error_response(error_message):
     return HttpResponse(json.dumps(dict(success=False, error_message=error_message)))
+
 
 
 def request_vote_on_comment(request):

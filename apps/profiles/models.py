@@ -6,3 +6,6 @@ from apps.posts.models import Category
 
 class DjredditUser(AbstractUser):
     subscribed = models.ManyToManyField(Category)
+
+    def get_subscribed(self):
+        return self.subscribed.all()

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Comment, Thread
+from .models import Comment, Thread, Category
 from mptt.forms import TreeNodeChoiceField
 
 
@@ -21,3 +21,9 @@ class NewThreadForm(forms.ModelForm):
         model = Thread
         fields = ('title','category')
 
+
+class NewCategoryForm(forms.ModelForm):
+
+    class Meta:
+        model = Category
+        fields = ('title','description')
